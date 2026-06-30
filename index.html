@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Alchemy Stone Growth — BDO Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --void: #08080f;
+            --void-2: #0c0d18;
+            --panel: #12131f;
+            --panel-2: #171927;
+            --line: #262a3d;
+            --line-soft: #1d2030;
+            --ink: #e7e9f3;
+            --ink-dim: #9aa0bd;
+            --ink-faint: #646a86;
+            --aether: #f0c674;
+            /* essence / gold */
+            --aether-deep: #b8862f;
+            --good: #52e3a4;
+            --bad: #f8807f;
+            --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+            --disp: "Cinzel", Georgia, serif;
+            --body: "Inter", system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0
+        }
+
+        body {
+            background:
+                radial-gradient(1100px 700px at 50% -10%, #1a1733 0%, rgba(26, 23, 51, 0) 60%),
+                radial-gradient(900px 600px at 85% 110%, #112033 0%, rgba(17, 32, 51, 0) 55%),
+                var(--void);
+            color: var(--ink);
+            font-family: var(--body);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            padding: 28px 18px 60px;
+        }
+
+        .wrap {
+            max-width: 760px;
+            margin: 0 auto
+        }
+
+        /* ---------- header ---------- */
+        header.top {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 22px
+        }
+
+        .title {
+            line-height: 1
+        }
+
+        .eyebrow {
+            font: 600 11px/1 var(--body);
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            color: var(--aether);
+            opacity: .85;
+            margin-bottom: 10px
+        }
+
+        h1 {
+            font: 600 27px/1.05 var(--disp);
+            letter-spacing: .02em;
+            margin: 0
+        }
+
+        .sub {
+            margin-top: 8px;
+            color: var(--ink-faint);
+            font-size: 12.5px;
+            max-width: 42ch
+        }
+
+        select {
+            appearance: none;
+            background: var(--panel-2);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 34px 9px 13px;
+            font: 500 13px var(--body);
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239aa0bd' stroke-width='1.6'><path d='M2 4l4 4 4-4'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        select:focus-visible {
+            outline: 2px solid var(--aether);
+            outline-offset: 2px
+        }
+
+        /* ---------- level track ---------- */
+        .track {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 22px;
+            flex-wrap: wrap
+        }
+
+        .pill {
+            flex: 1 1 0;
+            min-width: 84px;
+            border: 1px solid var(--line-soft);
+            background: var(--panel);
+            border-radius: 11px;
+            padding: 9px 8px 8px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: border-color .18s, background .18s, transform .12s;
+        }
+
+        .pill:hover {
+            border-color: var(--line);
+            transform: translateY(-1px)
+        }
+
+        .pill .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+            background: var(--lvl, #555);
+            box-shadow: 0 0 10px -1px var(--lvl, #555)
+        }
+
+        .pill .nm {
+            font: 600 11px var(--disp);
+            letter-spacing: .04em;
+            color: var(--ink-dim)
+        }
+
+        .pill.done {
+            background: linear-gradient(180deg, rgba(240, 198, 116, .08), transparent)
+        }
+
+        .pill.cur {
+            border-color: var(--lvl);
+            background: var(--panel-2)
+        }
+
+        .pill.cur .nm {
+            color: var(--ink)
+        }
+
+        .pill:focus-visible {
+            outline: 2px solid var(--aether);
+            outline-offset: 2px
+        }
+
+        /* ---------- forge ---------- */
+        .forge {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background:
+                radial-gradient(420px 300px at 50% 30%, rgba(255, 255, 255, .025), transparent 70%),
+                linear-gradient(180deg, var(--panel), var(--void-2));
+            padding: 30px 24px 26px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .from-to {
+            font: 600 12px var(--disp);
+            letter-spacing: .06em;
+            color: var(--ink-faint);
+            margin-bottom: 6px
+        }
+
+        .from-to b {
+            color: var(--ink-dim)
+        }
+
+        .from-to .arr {
+            color: var(--aether);
+            margin: 0 7px
+        }
+
+        .core {
+            position: relative;
+            width: 230px;
+            height: 230px;
+            margin: 8px auto 4px
+        }
+
+        .ring {
+            position: absolute;
+            inset: 0;
+            transform: rotate(-90deg)
+        }
+
+        .ring circle {
+            fill: none;
+            stroke-linecap: round
+        }
+
+        .ring .bg {
+            stroke: #23263a;
+            stroke-width: 5
+        }
+
+        .ring .fg {
+            stroke: var(--aether);
+            stroke-width: 5;
+            transition: stroke-dashoffset .35s ease, stroke .3s
+        }
+
+        .gemwrap {
+            position: absolute;
+            inset: 34px;
+            display: grid;
+            place-items: center
+        }
+
+        .gem {
+            width: 118px;
+            height: 118px;
+            position: relative;
+            transition: transform .25s cubic-bezier(.2, .9, .3, 1.4);
+            filter: drop-shadow(0 0 26px var(--glow, #555));
+        }
+
+        .gem svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible
+        }
+
+        .gem .facetMain {
+            fill: var(--gemc, #666)
+        }
+
+        .gem .facetTop {
+            fill: #ffffff;
+            opacity: .32
+        }
+
+        .gem .facetSide {
+            fill: #000;
+            opacity: .22
+        }
+
+        .gem .edge {
+            stroke: #fff;
+            stroke-opacity: .5;
+            stroke-width: 1;
+            fill: none
+        }
+
+        .core.shake {
+            animation: shake .42s
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            20% {
+                transform: translateX(-6px)
+            }
+
+            40% {
+                transform: translateX(5px)
+            }
+
+            60% {
+                transform: translateX(-4px)
+            }
+
+            80% {
+                transform: translateX(3px)
+            }
+        }
+
+        .core.pop .gem {
+            transform: scale(1.16)
+        }
+
+        .flare {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0
+        }
+
+        .flare.go {
+            animation: flare .6s ease-out
+        }
+
+        @keyframes flare {
+            0% {
+                opacity: .9;
+                transform: scale(.5);
+                box-shadow: 0 0 0 0 var(--glow)
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(1.5)
+            }
+        }
+
+        .chanceLabel {
+            font: 600 10.5px var(--body);
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+            margin-top: 14px
+        }
+
+        .chance {
+            font: 700 46px/1 var(--mono);
+            letter-spacing: -.01em;
+            margin-top: 2px
+        }
+
+        .chance.guar {
+            color: var(--good)
+        }
+
+        .chance small {
+            font-size: 22px;
+            opacity: .7;
+            font-weight: 500
+        }
+
+        .lastroll {
+            font: 600 12.5px var(--mono);
+            color: var(--ink-faint);
+            margin-top: 9px;
+            min-height: 17px;
+            letter-spacing: .01em
+        }
+
+        .lastroll .ok {
+            color: var(--good)
+        }
+
+        .lastroll .no {
+            color: var(--bad)
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .enhance {
+            font: 600 14px var(--body);
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #1a1405;
+            background: linear-gradient(180deg, #f7d488, var(--aether));
+            border: none;
+            border-radius: 12px;
+            padding: 13px 30px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px -10px var(--aether), inset 0 1px 0 rgba(255, 255, 255, .5);
+            transition: transform .1s, box-shadow .2s, filter .2s;
+        }
+
+        .enhance:hover {
+            filter: brightness(1.06)
+        }
+
+        .enhance:active {
+            transform: translateY(1px)
+        }
+
+        .enhance:disabled {
+            filter: grayscale(.7) brightness(.7);
+            cursor: default;
+            box-shadow: none
+        }
+
+        .enhance.guar {
+            background: linear-gradient(180deg, #7ef0bd, var(--good));
+            box-shadow: 0 8px 24px -10px var(--good), inset 0 1px 0 rgba(255, 255, 255, .5)
+        }
+
+        .ghost {
+            font: 500 13px var(--body);
+            color: var(--ink-dim);
+            background: transparent;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: .18s;
+        }
+
+        .ghost:hover {
+            border-color: var(--ink-faint);
+            color: var(--ink)
+        }
+
+        .enhance:focus-visible,
+        .ghost:focus-visible {
+            outline: 2px solid var(--aether);
+            outline-offset: 2px
+        }
+
+        /* ---------- stat strip ---------- */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            margin-top: 22px;
+            border: 1px solid var(--line-soft);
+            border-radius: 13px;
+            overflow: hidden;
+            background: var(--line-soft)
+        }
+
+        .stat {
+            background: var(--panel);
+            padding: 13px 10px;
+            text-align: center
+        }
+
+        .stat .v {
+            font: 700 19px var(--mono);
+            color: var(--ink)
+        }
+
+        .stat .v.aether {
+            color: var(--aether)
+        }
+
+        .stat .k {
+            font: 500 10px var(--body);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+            margin-top: 3px
+        }
+
+        /* ---------- log ---------- */
+        .log {
+            margin-top: 18px;
+            border: 1px solid var(--line-soft);
+            border-radius: 13px;
+            background: var(--panel);
+            overflow: hidden
+        }
+
+        .log h3 {
+            margin: 0;
+            font: 600 11px var(--body);
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--line-soft)
+        }
+
+        .log .rows {
+            max-height: 168px;
+            overflow: auto;
+            padding: 6px 6px 8px
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 9px;
+            border-radius: 8px;
+            font-size: 12.5px
+        }
+
+        .row:nth-child(odd) {
+            background: rgba(255, 255, 255, .015)
+        }
+
+        .tag {
+            font: 700 10px var(--mono);
+            padding: 2px 7px;
+            border-radius: 5px;
+            flex: none;
+            width: 58px;
+            text-align: center
+        }
+
+        .tag.s {
+            background: rgba(82, 227, 164, .14);
+            color: var(--good)
+        }
+
+        .tag.f {
+            background: rgba(248, 128, 127, .13);
+            color: var(--bad)
+        }
+
+        .tag.g {
+            background: rgba(240, 198, 116, .16);
+            color: var(--aether)
+        }
+
+        .row .txt {
+            color: var(--ink-dim)
+        }
+
+        .row .txt b {
+            color: var(--ink)
+        }
+
+        .row .roll {
+            margin-left: auto;
+            flex: none;
+            font: 700 11.5px var(--mono);
+            font-variant-numeric: tabular-nums;
+            color: var(--ink-faint)
+        }
+
+        .row .roll.s {
+            color: var(--good)
+        }
+
+        .row .roll.f {
+            color: var(--bad)
+        }
+
+        .row .roll.g {
+            color: var(--aether)
+        }
+
+        .row .roll .sl {
+            color: var(--ink-faint);
+            font-weight: 500
+        }
+
+        .empty {
+            color: var(--ink-faint);
+            font-size: 12.5px;
+            padding: 14px 15px
+        }
+
+        /* ---------- collapsibles ---------- */
+        details {
+            margin-top: 16px;
+            border: 1px solid var(--line-soft);
+            border-radius: 13px;
+            background: var(--panel);
+            overflow: hidden
+        }
+
+        summary {
+            cursor: pointer;
+            list-style: none;
+            padding: 14px 16px;
+            font: 600 12px var(--body);
+            letter-spacing: .08em;
+            color: var(--ink-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        summary::-webkit-details-marker {
+            display: none
+        }
+
+        summary .chev {
+            transition: transform .2s;
+            color: var(--ink-faint)
+        }
+
+        details[open] summary .chev {
+            transform: rotate(180deg)
+        }
+
+        .pad {
+            padding: 0 16px 16px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px
+        }
+
+        th,
+        td {
+            padding: 8px 6px;
+            text-align: right;
+            border-bottom: 1px solid var(--line-soft);
+            font-variant-numeric: tabular-nums
+        }
+
+        th {
+            font: 600 10px var(--body);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--ink-faint)
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left
+        }
+
+        td.lvl {
+            font: 600 12px var(--disp)
+        }
+
+        td .ld {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 7px;
+            vertical-align: middle
+        }
+
+        .mc-controls {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 14px
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .field label {
+            font: 500 10px var(--body);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--ink-faint)
+        }
+
+        .run {
+            font: 600 12px var(--body);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #1a1405;
+            background: var(--aether);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
+            cursor: pointer
+        }
+
+        .run:hover {
+            filter: brightness(1.06)
+        }
+
+        .mc-out {
+            display: none
+        }
+
+        .mc-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--line-soft);
+            border: 1px solid var(--line-soft);
+            border-radius: 11px;
+            overflow: hidden;
+            margin-bottom: 14px
+        }
+
+        .mc-cell {
+            background: var(--panel-2);
+            padding: 12px 10px;
+            text-align: center
+        }
+
+        .mc-cell .v {
+            font: 700 17px var(--mono)
+        }
+
+        .mc-cell .v.aether {
+            color: var(--aether)
+        }
+
+        .mc-cell .k {
+            font: 500 9.5px var(--body);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+            margin-top: 3px
+        }
+
+        .hist {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 88px;
+            padding: 8px 2px 0
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--aether), var(--aether-deep));
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+            opacity: .85
+        }
+
+        .hist-x {
+            display: flex;
+            justify-content: space-between;
+            font: 500 10px var(--mono);
+            color: var(--ink-faint);
+            margin-top: 6px
+        }
+
+        .note {
+            font-size: 11.5px;
+            color: var(--ink-faint);
+            margin-top: 12px;
+            line-height: 1.5
+        }
+
+        .foot {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--ink-faint);
+            line-height: 1.6
+        }
+
+        @media (max-width:480px) {
+            .chance {
+                font-size: 38px
+            }
+
+            .core {
+                width: 200px;
+                height: 200px
+            }
+
+            .gemwrap {
+                inset: 30px
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <header class="top">
+            <div class="title">
+                <div class="eyebrow">Black Desert Online</div>
+                <h1>Alchemy Stone Growth Simulator</h1>
+            </div>
+        </header>
+
+        <nav class="track" id="track" aria-label="Growth tier"></nav>
+
+        <section class="forge">
+            <div class="from-to" id="fromTo"></div>
+
+            <div class="core" id="core">
+                <svg class="ring" viewBox="0 0 230 230" aria-hidden="true">
+                    <circle class="bg" cx="115" cy="115" r="105"></circle>
+                    <circle class="fg" id="ringFg" cx="115" cy="115" r="105"></circle>
+                </svg>
+                <div class="flare" id="flare"></div>
+                <div class="gemwrap">
+                    <div class="gem" id="gem">
+                        <svg viewBox="0 0 100 100" aria-hidden="true">
+                            <polygon class="facetMain" points="50,4 92,38 50,96 8,38"></polygon>
+                            <polygon class="facetTop" points="50,4 92,38 50,46 8,38"></polygon>
+                            <polygon class="facetSide" points="50,46 92,38 50,96"></polygon>
+                            <polygon class="edge" points="50,4 92,38 50,96 8,38"></polygon>
+                            <line class="edge" x1="8" y1="38" x2="92" y2="38"></line>
+                            <line class="edge" x1="50" y1="4" x2="50" y2="96"></line>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chanceLabel">Current enhancement chance</div>
+            <div class="chance" id="chance">—</div>
+            <div class="lastroll" id="lastRoll"></div>
+
+            <div class="actions">
+                <button class="enhance" id="enhanceBtn">Enhance</button>
+                <button class="ghost" id="resetBtn">Reset to Imperfect</button>
+            </div>
+        </section>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="v" id="sPity">0 / 0</div>
+                <div class="k">Anvil pity</div>
+            </div>
+            <div class="stat">
+                <div class="v aether" id="sEssence">0</div>
+                <div class="k">Essence used</div>
+            </div>
+            <div class="stat">
+                <div class="v" id="sClicks">0</div>
+                <div class="k">Clicks</div>
+            </div>
+            <div class="stat">
+                <div class="v" id="sFails">0</div>
+                <div class="k">Failures</div>
+            </div>
+        </div>
+
+        <div class="log">
+            <h3>Attempt log</h3>
+            <div class="rows" id="logRows">
+                <div class="empty">No attempts yet. Pick a tier and hit Enhance.</div>
+            </div>
+        </div>
+
+        <details>
+            <summary>Tier reference <span class="chev">▾</span></summary>
+            <div class="pad">
+                <table id="refTable">
+                    <thead>
+                        <tr>
+                            <th>Upgrade to</th>
+                            <th>Chance</th>
+                            <th>Essence / click</th>
+                            <th>Pity</th>
+                            <th>Avg clicks</th>
+                            <th>Odds to pity</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <p class="note">Avg clicks and odds-to-pity are computed from the base chance and pity cap. Odds-to-pity
+                    = (1−chance)<sup>pity</sup> — the share of attempts that fail their way all the way to the
+                    guaranteed click.</p>
+            </div>
+        </details>
+
+        <details>
+            <summary>Run the numbers — Monte Carlo <span class="chev">▾</span></summary>
+            <div class="pad">
+                <div class="mc-controls">
+                    <div class="field">
+                        <label for="mcFrom">From</label>
+                        <select id="mcFrom"></select>
+                    </div>
+                    <div class="field">
+                        <label for="mcTo">To</label>
+                        <select id="mcTo"></select>
+                    </div>
+                    <div class="field">
+                        <label for="mcRuns">Runs</label>
+                        <select id="mcRuns">
+                            <option value="1000">1,000</option>
+                            <option value="10000" selected>10,000</option>
+                            <option value="50000">50,000</option>
+                        </select>
+                    </div>
+                    <button class="run" id="mcRun">Simulate</button>
+                </div>
+                <div class="mc-out" id="mcOut">
+                    <div class="mc-grid">
+                        <div class="mc-cell">
+                            <div class="v aether" id="mcEss">—</div>
+                            <div class="k">Avg essence</div>
+                        </div>
+                        <div class="mc-cell">
+                            <div class="v" id="mcClk">—</div>
+                            <div class="k">Avg clicks</div>
+                        </div>
+                        <div class="mc-cell">
+                            <div class="v" id="mcPity">—</div>
+                            <div class="k">Hit pity</div>
+                        </div>
+                    </div>
+                    <div class="mc-grid">
+                        <div class="mc-cell">
+                            <div class="v" id="mcMin">—</div>
+                            <div class="k">Luckiest essence</div>
+                        </div>
+                        <div class="mc-cell">
+                            <div class="v" id="mcMed">—</div>
+                            <div class="k">Median essence</div>
+                        </div>
+                        <div class="mc-cell">
+                            <div class="v" id="mcP90">—</div>
+                            <div class="k">90th %ile essence</div>
+                        </div>
+                    </div>
+                    <div class="hist" id="hist"></div>
+                    <div class="hist-x"><span id="histLo"></span><span>essence spent →</span><span id="histHi"></span>
+                    </div>
+                </div>
+                <p class="note" id="mcNote">Simulates full growth runs with the pity guarantee applied. Counts every
+                    click's essence across the chosen tiers.</p>
+            </div>
+        </details>
+
+        <p class="foot">Mechanics reflect the Jan 2026 alchemy stone rework (failure no longer downgrades or destroys
+            the stone; Ancient Anvil pity guarantees success at the cap). Base chances &amp; pity caps sourced from the
+            live tier values. Not affiliated with Pearl Abyss.</p>
+
+    </div>
+
+    <script>
+        // ---- tier data: index 0 is the base stone; each later tier = an attempt FROM the previous one ----
+        const TIERS = [
+            { name: "Imperfect", chance: null, essence: 0, pity: 0, color: "#6b7280", glow: "rgba(107,114,128,.5)" },
+            { name: "Sturdy", chance: 55.055, essence: 2, pity: 2, color: "#7dd3fc", glow: "rgba(125,211,252,.55)" },
+            { name: "Sharp", chance: 20.064, essence: 3, pity: 5, color: "#86efac", glow: "rgba(134,239,172,.55)" },
+            { name: "Resplendent", chance: 3.3158, essence: 10, pity: 30, color: "#60a5fa", glow: "rgba(96,165,250,.6)" },
+            { name: "Splendid", chance: 1.2588, essence: 20, pity: 80, color: "#c084fc", glow: "rgba(192,132,252,.65)" },
+            { name: "Shining", chance: 0.4005, essence: 30, pity: 250, color: "#fbbf24", glow: "rgba(251,191,36,.7)" },
+        ];
+        const MAX = TIERS.length - 1;
+        const RING_C = 2 * Math.PI * 105;
+
+        const state = { lvl: 0, anvil: 0, essence: 0, clicks: 0, fails: 0, log: [] };
+        let lastRoll = null;
+
+        // ---- elements ----
+        const $ = id => document.getElementById(id);
+        const track = $("track"), fromTo = $("fromTo"), core = $("core"), gem = $("gem"),
+            ringFg = $("ringFg"), flare = $("flare"), chanceEl = $("chance"),
+            enhanceBtn = $("enhanceBtn"), resetBtn = $("resetBtn"),
+            sPity = $("sPity"), sEssence = $("sEssence"), sClicks = $("sClicks"), sFails = $("sFails"),
+            logRows = $("logRows");
+
+        ringFg.style.strokeDasharray = RING_C;
+
+        // ---- helpers ----
+        const fmt = n => n.toLocaleString("en-US");
+        const target = () => state.lvl < MAX ? TIERS[state.lvl + 1] : null;
+        const guaranteed = () => { const t = target(); return t && state.anvil >= t.pity; };
+
+        // truncated-geometric expectation: clicks until success, capped by guaranteed click at pity+1
+        function avgClicks(p, pity) {
+            const q = 1 - p / 100;
+            return (1 - Math.pow(q, pity + 1)) / (p / 100);
+        }
+        function oddsToPity(p, pity) { return Math.pow(1 - p / 100, pity); }
+
+        // ---- render ----
+        function buildTrack() {
+            track.innerHTML = "";
+            TIERS.forEach((t, i) => {
+                const b = document.createElement("button");
+                b.className = "pill"; b.style.setProperty("--lvl", t.color);
+                b.innerHTML = `<div class="dot"></div><div class="nm">${t.name}</div>`;
+                b.title = i === 0 ? "Base stone" : `Upgrade target · ${t.chance}%`;
+                b.onclick = () => { setLevel(i); };
+                track.appendChild(b);
+            });
+        }
+
+        function setLevel(i) {
+            state.lvl = i; state.anvil = 0; lastRoll = null;
+            render();
+        }
+
+        function render() {
+            const cur = TIERS[state.lvl], t = target();
+            // track
+            [...track.children].forEach((el, i) => {
+                el.classList.toggle("done", i < state.lvl);
+                el.classList.toggle("cur", i === state.lvl);
+            });
+            // gem
+            gem.style.setProperty("--gemc", cur.color);
+            gem.style.setProperty("--glow", cur.glow);
+            flare.style.setProperty("--glow", cur.glow);
+            // from -> to
+            if (t) {
+                fromTo.innerHTML = `<b>${cur.name}</b><span class="arr">→</span><b>${t.name}</b>`;
+            } else {
+                fromTo.innerHTML = `<b>${cur.name}</b> · max tier reached`;
+            }
+            // ring (pity fill)
+            let frac = 0;
+            if (t && t.pity > 0) frac = Math.min(state.anvil / t.pity, 1);
+            ringFg.style.strokeDashoffset = RING_C * (1 - frac);
+            ringFg.style.stroke = guaranteed() ? "var(--good)" : "var(--aether)";
+            // chance
+            if (!t) {
+                chanceEl.textContent = "MAX"; chanceEl.classList.remove("guar");
+                enhanceBtn.disabled = true; enhanceBtn.textContent = "Complete"; enhanceBtn.classList.remove("guar");
+            } else if (guaranteed()) {
+                chanceEl.innerHTML = "100<small>%</small>"; chanceEl.classList.add("guar");
+                enhanceBtn.disabled = false; enhanceBtn.textContent = "Guaranteed enhance"; enhanceBtn.classList.add("guar");
+            } else {
+                chanceEl.innerHTML = `${t.chance}<small>%</small>`; chanceEl.classList.remove("guar");
+                enhanceBtn.disabled = false; enhanceBtn.textContent = "Enhance"; enhanceBtn.classList.remove("guar");
+            }
+            // stats
+            sPity.textContent = t ? `${state.anvil} / ${t.pity}` : "—";
+            sEssence.textContent = fmt(state.essence);
+            sClicks.textContent = fmt(state.clicks);
+            sFails.textContent = fmt(state.fails);
+            // last roll readout
+            const lr = $("lastRoll");
+            if (!lastRoll) { lr.innerHTML = ""; }
+            else if (lastRoll.guar) { lr.innerHTML = `<span class="ok">pity reached — guaranteed</span>`; }
+            else {
+                const c = lastRoll.success ? "ok" : "no";
+                lr.innerHTML = `rolled <span class="${c}">${lastRoll.roll.toFixed(2)}</span> &middot; needed under ${lastRoll.need}`;
+            }
+            // log
+            renderLog();
+        }
+
+        function renderLog() {
+            if (!state.log.length) { logRows.innerHTML = `<div class="empty">No attempts yet. Pick a tier and hit Enhance.</div>`; return; }
+            logRows.innerHTML = state.log.slice(0, 40).map(e => {
+                const cls = e.kind === "s" ? "s" : (e.kind === "g" ? "g" : "f");
+                const tag = e.kind === "s" ? "SUCCESS" : (e.kind === "g" ? "PITY" : "FAIL");
+                let roll;
+                if (e.roll === null || e.roll === undefined) {
+                    roll = `<span class="roll g">guaranteed</span>`;
+                } else {
+                    roll = `<span class="roll ${e.kind === "f" ? "f" : "s"}">${e.roll.toFixed(2)}<span class="sl"> / ${e.need}</span></span>`;
+                }
+                return `<div class="row"><span class="tag ${cls}">${tag}</span>
+      <span class="txt">${e.kind === "f" ? "Stayed" : "Reached"} <b>${e.to}</b> &middot; &minus;${e.cost} essence</span>
+      ${roll}</div>`;
+            }).join("");
+        }
+
+        // ---- enhance ----
+        function enhance() {
+            const t = target(); if (!t) return;
+            const guar = guaranteed();
+            const roll = Math.random() * 100;            // 0–100; success when roll < chance
+            const success = guar || (roll < t.chance);
+            state.clicks++; state.essence += t.essence;
+
+            if (success) {
+                state.log.unshift({ kind: guar ? "g" : "s", to: t.name, cost: t.essence, roll: guar ? null : roll, need: t.chance });
+                state.lvl++; state.anvil = 0;
+                animate(true);
+            } else {
+                state.fails++; state.anvil++;
+                state.log.unshift({ kind: "f", to: TIERS[state.lvl].name, cost: t.essence, roll, need: t.chance });
+                animate(false);
+            }
+            lastRoll = guar ? { guar: true, need: t.chance } : { roll, need: t.chance, success };
+            render();
+        }
+
+        function animate(ok) {
+            if (ok) {
+                core.classList.add("pop"); flare.classList.add("go");
+                setTimeout(() => { core.classList.remove("pop"); flare.classList.remove("go"); }, 600);
+            } else {
+                core.classList.add("shake");
+                setTimeout(() => core.classList.remove("shake"), 440);
+            }
+        }
+
+        function reset() {
+            Object.assign(state, { lvl: 0, anvil: 0, essence: 0, clicks: 0, fails: 0, log: [] });
+            lastRoll = null;
+            render();
+        }
+
+        enhanceBtn.onclick = enhance;
+        resetBtn.onclick = reset;
+        document.addEventListener("keydown", e => { if (e.code === "Space" && !enhanceBtn.disabled) { e.preventDefault(); enhance(); } });
+
+        // ---- reference table ----
+        (function refTable() {
+            const tb = $("refTable").querySelector("tbody");
+            tb.innerHTML = TIERS.slice(1).map(t => `
+    <tr>
+      <td class="lvl"><span class="ld" style="background:${t.color}"></span>${t.name}</td>
+      <td>${t.chance}%</td>
+      <td>${t.essence}</td>
+      <td>${t.pity}</td>
+      <td>${avgClicks(t.chance, t.pity).toFixed(2)}</td>
+      <td>${(oddsToPity(t.chance, t.pity) * 100).toFixed(1)}%</td>
+    </tr>`).join("");
+        })();
+
+        // ---- monte carlo ----
+        function fillMcSelects() {
+            const from = $("mcFrom"), to = $("mcTo");
+            from.innerHTML = TIERS.slice(0, MAX).map((t, i) => `<option value="${i}">${t.name}</option>`).join("");
+            to.innerHTML = TIERS.slice(1).map((t, i) => `<option value="${i + 1}" ${i + 1 === MAX ? "selected" : ""}>${t.name}</option>`).join("");
+            from.value = "0";
+        }
+        fillMcSelects();
+
+        function simulate() {
+            const from = +$("mcFrom").value, to = +$("mcTo").value, runs = +$("mcRuns").value;
+            if (to <= from) { $("mcNote").textContent = "Pick a target tier above the starting tier."; return; }
+            const essences = new Array(runs), clicksArr = new Array(runs); let pityHits = 0;
+            for (let r = 0; r < runs; r++) {
+                let ess = 0, clk = 0, hitPity = false;
+                for (let lvl = from; lvl < to; lvl++) {
+                    const t = TIERS[lvl + 1]; let anvil = 0;
+                    while (true) {
+                        clk++; ess += t.essence;
+                        const guar = anvil >= t.pity;
+                        if (guar) { hitPity = true; break; }
+                        if (Math.random() * 100 < t.chance) break;
+                        anvil++;
+                    }
+                }
+                essences[r] = ess; clicksArr[r] = clk; if (hitPity) pityHits++;
+            }
+            essences.sort((a, b) => a - b); clicksArr.sort((a, b) => a - b);
+            const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+            const q = (a, p) => a[Math.min(a.length - 1, Math.floor(p * a.length))];
+
+            $("mcEss").textContent = fmt(Math.round(mean(essences)));
+            $("mcClk").textContent = fmt(Math.round(mean(clicksArr)));
+            $("mcPity").textContent = (pityHits / runs * 100).toFixed(1) + "%";
+            $("mcMin").textContent = fmt(essences[0]);
+            $("mcMed").textContent = fmt(q(essences, .5));
+            $("mcP90").textContent = fmt(q(essences, .9));
+
+            // histogram across [min, p99] for readability
+            const lo = essences[0], hi = q(essences, .99), bins = 24, span = Math.max(1, hi - lo);
+            const counts = new Array(bins).fill(0);
+            for (const e of essences) { let b = Math.floor((e - lo) / span * bins); if (b < 0) b = 0; if (b >= bins) b = bins - 1; counts[b]++; }
+            const peak = Math.max(...counts);
+            $("hist").innerHTML = counts.map(c => `<div class="bar" style="height:${c / peak * 100}%"></div>`).join("");
+            $("histLo").textContent = fmt(lo);
+            $("histHi").textContent = fmt(hi) + "+";
+            $("mcOut").style.display = "block";
+            $("mcNote").textContent = `${fmt(runs)} runs · ${TIERS[from].name} → ${TIERS[to].name}. Histogram clipped at the 99th percentile.`;
+        }
+        $("mcRun").onclick = simulate;
+
+        // ---- boot ----
+        buildTrack();
+        render();
+    </script>
+</body>
+
+</html>
